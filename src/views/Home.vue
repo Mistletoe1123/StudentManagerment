@@ -1,18 +1,20 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
-  </div>
+  <div>{{content}}</div>
 </template>
 
 <script>
 // @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
 
 export default {
-  name: "Home",
-  components: {
-    HelloWorld,
+  data(){
+    return{
+      content:""
+    }
   },
+  mounted(){
+    this.content = process.env.VUE_APP_NAME
+    console.log(process.env)//{NODE_ENV: "development", BASE_URL: ""}
+    //console.log(process.env.NODE_ENV);//development
+  }
 };
 </script>
