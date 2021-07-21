@@ -276,6 +276,7 @@ body {
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;
     border-left: 0;
+    background: rgba(255, 255, 255, 0.3);
     svg {
       width: 115px;
       height: 40px;
