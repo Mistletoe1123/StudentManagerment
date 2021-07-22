@@ -10,31 +10,53 @@
       class="demo-loginForm"
     >
       <h1 class="hh">邓邓管理后台</h1>
-      <el-form-item label="用户名" prop="username">
-        <el-input type="text" v-model="loginForm.username" autocomplete="off" placeholder="请输入您的用户名"></el-input>
-      </el-form-item>
-      <el-form-item label="密码" prop="password">
-        <el-input
-          type="password"
-          v-model="loginForm.password"
-          autocomplete="off"
-          placeholder="请输入您的密码"
-        ></el-input>
-      </el-form-item>
-      <el-form-item label="验证码" prop="captcha" class="captcha-box">
-        <el-input
-          type="text"
-          autocomplete="off"
-          placeholder="请输入验证码"
-          class="captcha"
-          v-model="loginForm.captcha"
-          @keydown.native.enter="submitForm('loginForm')"
-        ></el-input>
-        <span class="captcha-svg" v-html="captcha" @click="refreshCaptchaApi"></span>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="submitForm('loginForm')">提交</el-button>
-      </el-form-item>
+      <!-- 角标 -->
+      <div class="jiaobiao" @click="isErweima=!isErweima">
+        <svg class="icon" aria-hidden="true">
+          <use :xlink:href="isErweima?'#icon-diannao':'#icon-erweima'" />
+        </svg>
+      </div>
+      <!-- 二维码 -->
+      <div class="erweima" v-if="isErweima">
+        <div class="img">
+          <img :src="qrImgUrl" alt width="200px" />
+          <!-- 成功遮罩 使用伪类 -->
+          <i class="mask" v-show="isScanshow"></i>
+        </div>
+        <p style="color:#fff">请使用微信扫码登录</p>
+      </div>
+      <div class="input" v-else>
+        <el-form-item label="用户名" prop="username">
+          <el-input
+            type="text"
+            v-model="loginForm.username"
+            autocomplete="off"
+            placeholder="请输入您的用户名"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input
+            type="password"
+            v-model="loginForm.password"
+            autocomplete="off"
+            placeholder="请输入您的密码"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="验证码" prop="captcha" class="captcha-box">
+          <el-input
+            type="text"
+            autocomplete="off"
+            placeholder="请输入验证码"
+            class="captcha"
+            v-model="loginForm.captcha"
+            @keydown.native.enter="submitForm('loginForm')"
+          ></el-input>
+          <span class="captcha-svg" v-html="captcha" @click="refreshCaptchaApi"></span>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="submitForm('loginForm')">提交</el-button>
+        </el-form-item>
+      </div>
     </el-form>
     <video
       src="../../assets/video/backvideo.mp4"
@@ -43,7 +65,7 @@
       class="video"
       muted
     ></video>
-    //proload
+    <!--  proload -->
   </div>
 </template>
 
@@ -53,7 +75,9 @@
 2.服务端进行校验，通过返回用户信息和token
 3.将token存到本地存储
 4.登入成功跳转到主页，失败跳转登录页 */
-import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi} from "@/api"
+import io from "socket.io-client"
+import qr from "qrcode"
+import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi,getScancodeApi,wechatLoginApi} from "@/api"
   export default {
     data() {
       var validateUsername = (rule, value, callback) => {
@@ -91,6 +115,9 @@ import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi} from "@/api"
           password: '',
           captcha:''
         },
+        isErweima:false,//显示二维码
+        isScanshow:false,//显示扫码成功
+        qrImgUrl:'',
         rules: {
           username: [//校验用户名
             { validator: validateUsername, trigger: 'blur' }
@@ -130,7 +157,7 @@ import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi} from "@/api"
                  // console.log(res.data);//{status: 1, state: true, msg: "登入成功", permission: {…}, userInfo: {…}, …}
                  loading.close();
                   localStorage.setItem('token',res.data.token) 
-                  this.$router.push('/home')
+                  this.$router.push('/')
                 }else{//登入失败
                 loading.close();
                  this.$message({
@@ -179,6 +206,41 @@ import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi} from "@/api"
     },
     created(){
      this.refreshCaptchaApi()//首次出现验证码
+    },
+    watch:{
+      isErweima(newVal,oldVal){
+        //console.log(newVal);//true false
+         if(newVal){//微信登入
+           let socket = io("ws://chst.vip")//不叫io就可
+        socket.on('connect',()=>{
+          console.log('连接成功呢');
+
+          //调用接口 获取二维码地址(返回的地址生成二维码)
+        getScancodeApi().then(res=>{
+          //console.log(res);//scancodeUrl
+          let qrUrl = res.data.scanCodeUrl
+          qr.toDataURL(qrUrl,(error,imgUrl)=>{//地址生成二维码
+            if(error) throw error
+           // console.log(imgUrl);
+            this.qrImgUrl = imgUrl;
+           })
+          })
+        }) 
+        //扫码成功时间
+        socket.on('scancodeSuccess',(data=>{
+         // console.log(data);//里面有wechatCode
+          let {wechatCode} = data
+          this.isScanshow = true;
+          wechatLoginApi(wechatCode).then(res=>{
+            //console.log(res);
+            //登入成功 token 用户信息存到本地 跳转主页
+            localStorage.setItem('token',res.data.token)
+            localStorage.setItem('userInfo',JSON.stringify(res.data.userInfo))
+            this.$router.push("/")
+          })
+        }))
+         }
+      }
     }
   }
 </script>
@@ -215,6 +277,36 @@ body {
       border-radius: 15px;
       background: rgba(0, 0, 0, 0.1);
       text-align: center;
+      .jiaobiao {
+        position: absolute;
+        top: 0;
+        right: 0;
+        .icon{
+          width: 60px;
+          height: 60px;
+        }
+      }
+      .erweima .img {
+        display: inline-block;
+        position: relative;
+        width: 200px;
+        height: 200px;
+        img {
+          position: absolute;
+          left: 0;
+        }
+        .mask {
+          width: 100%;
+          height: 100%;
+          background: pink;
+          opacity: 0.7;
+          position: absolute;
+          left: 0;
+          background: url("./../../assets/images/scansuccess.png") no-repeat
+            center center;
+          background-size: 70%;
+        }
+      }
       .hh {
         color: #fff;
         margin: 90px 0 40px 0;
@@ -286,5 +378,13 @@ body {
 ::v-deep input::-webkit-input-placeholder {
   color: black;
   font-weight: 800;
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  fill: currentColor;
+  overflow: hidden;
 }
 </style>

@@ -17,10 +17,24 @@ const routes = [
       import(/* webpackChunkName: "Login" */ "../pages/login"),
   },
   {
-    path: "/home",
+    path: "/",
     name: "Home",
     component: () =>
       import(/* webpackChunkName: "Home" */ "../pages/Home"),
+    children: [
+      {
+        path: "/welcome",
+        name: "welcome",
+        component: () =>
+          import(/* webpackChunkName: "Login" */ "../pages/Home/Welcome"),
+      },
+      {
+        path: "/my",
+        name: "my",
+        component: () =>
+          import(/* webpackChunkName: "my" */ "../pages/Home/My"),
+      }
+    ]
   }
 ];
 

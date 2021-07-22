@@ -1,7 +1,7 @@
 <template>
-  <div>
-    welcome
-  </div>
+  <DIV>
+      my
+  </DIV>
 </template>
 
 <script>
