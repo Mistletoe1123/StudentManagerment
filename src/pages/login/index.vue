@@ -20,11 +20,12 @@
       <div class="erweima" v-if="isErweima">
         <div class="img">
           <img :src="qrImgUrl" alt width="200px" />
-          <!-- 成功遮罩 使用伪类 -->
+          <!-- 二维码扫描成功遮罩 使用伪类 -->
           <i class="mask" v-show="isScanshow"></i>
         </div>
         <p style="color:#fff">请使用微信扫码登录</p>
       </div>
+      <!-- 整个输入框 -->
       <div class="input" v-else>
         <el-form-item label="用户名" prop="username">
           <el-input
@@ -51,8 +52,10 @@
             v-model="loginForm.captcha"
             @keydown.native.enter="submitForm('loginForm')"
           ></el-input>
+          <!-- 验证码 -->
           <span class="captcha-svg" v-html="captcha" @click="refreshCaptchaApi"></span>
         </el-form-item>
+        <!-- 提交按钮 -->
         <el-form-item>
           <el-button type="primary" @click="submitForm('loginForm')">提交</el-button>
         </el-form-item>
@@ -77,6 +80,7 @@
 4.登入成功跳转到主页，失败跳转登录页 */
 import io from "socket.io-client"
 import qr from "qrcode"
+import {mapMutations } from "vuex"
 import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi,getScancodeApi,wechatLoginApi} from "@/api"
   export default {
     data() {
@@ -133,6 +137,8 @@ import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi,getScancodeApi
       };
     },
     methods: {
+      ...mapMutations(['setUserInfo']),
+      //...mapActions(['FETCH_MENULIST']),
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {//本地校验
@@ -155,9 +161,12 @@ import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi,getScancodeApi
                 if(res.data.state){
                   //用户名密码正确 token存到本地 跳转到主页home
                  // console.log(res.data);//{status: 1, state: true, msg: "登入成功", permission: {…}, userInfo: {…}, …}
-                 loading.close();
-                  localStorage.setItem('token',res.data.token) 
-                  this.$router.push('/')
+                loading.close();
+                localStorage.setItem('token',res.data.token) 
+                this.setUserInfo(res.data.userInfo)
+                localStorage.setItem('userInfo',JSON.stringify(res.data.userInfo)) 
+
+                this.$router.push('/')
                 }else{//登入失败
                 loading.close();
                  this.$message({
@@ -215,26 +224,28 @@ import {loginApi,getCaptchaApi,refreshCaptchaApi,verifyCaptchaApi,getScancodeApi
         socket.on('connect',()=>{
           console.log('连接成功呢');
 
-          //调用接口 获取二维码地址(返回的地址生成二维码)
+        //调用接口 获取二维码地址scancodeUrl(返回的地址生成二维码)
         getScancodeApi().then(res=>{
           //console.log(res);//scancodeUrl
           let qrUrl = res.data.scanCodeUrl
           qr.toDataURL(qrUrl,(error,imgUrl)=>{//地址生成二维码
             if(error) throw error
-           // console.log(imgUrl);
+           // console.log(imgUrl);一大坨内容是Base64码
             this.qrImgUrl = imgUrl;
            })
           })
         }) 
-        //扫码成功时间
+        //扫码成功事件
         socket.on('scancodeSuccess',(data=>{
-         // console.log(data);//里面有wechatCode
+         // console.log(data);//里面有需要的wechatCode
           let {wechatCode} = data
-          this.isScanshow = true;
+          this.isScanshow = true;//出现遮罩层
           wechatLoginApi(wechatCode).then(res=>{
+            //this.$store.dispatch('FETCH_MENULIST')
             //console.log(res);
             //登入成功 token 用户信息存到本地 跳转主页
             localStorage.setItem('token',res.data.token)
+            this.setUserInfo(res.data.userInfo)//userInfo存到vue中
             localStorage.setItem('userInfo',JSON.stringify(res.data.userInfo))
             this.$router.push("/")
           })
@@ -281,7 +292,7 @@ body {
         position: absolute;
         top: 0;
         right: 0;
-        .icon{
+        .icon {
           width: 60px;
           height: 60px;
         }
@@ -298,7 +309,7 @@ body {
         .mask {
           width: 100%;
           height: 100%;
-          background: pink;
+          background-color: pink;
           opacity: 0.7;
           position: absolute;
           left: 0;

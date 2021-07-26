@@ -39,3 +39,6 @@ export const getloginlogApi = (page = 1, count = 10) => axios.get("/getloginlog"
         page, count
     }
 })
+
+//获取权限菜单
+export const getMenuListApi = () => axios.get("/permission/getMenuList")

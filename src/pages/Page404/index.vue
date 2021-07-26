@@ -1,7 +1,7 @@
 <template>
-  <DIV>
-      my
-  </DIV>
+  <div>
+      404 404 404 404 404 404
+  </div>
 </template>
 
 <script>

@@ -27,9 +27,10 @@ http.interceptors.request.use(config => {
 //失效 过期 跳转登入页
 //错误 消磁 跳转登入页
 http.interceptors.response.use(config => {
-    console.log(el);
+    //console.log(el);
     if (config.data.code === '1004' || config.data.code === '10022') {
         router.push('/login')
+        localStorage.removeItem('token')
         el.Message.error('登录信息过期！')
     }
     return config

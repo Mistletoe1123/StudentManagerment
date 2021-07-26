@@ -6947,6 +6947,16 @@ q@^1.1.2:
   resolved "https://registry.nlark.com/q/download/q-1.5.1.tgz#7e32f75b41381291d04611f1bf14109ac00651d7"
   integrity sha1-fjL3W0E4EpHQRhHxvxQQmsAGUdc=
 
+qf-sub-menu2@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.nlark.com/qf-sub-menu2/download/qf-sub-menu2-1.0.0.tgz#7c4fc469c9eae3f0db4d98449258ec1c7c75ab95"
+  integrity sha1-fE/Eacnq4/DbTZhEkljsHHx1q5U=
+
+qf-sub-menu@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.nlark.com/qf-sub-menu/download/qf-sub-menu-1.0.5.tgz#236895a8f5cc945567dddea92eb637b1c6d518b5"
+  integrity sha1-I2iVqPXMlFVn3d6pLrY3scbVGLU=
+
 qrcode@^1.4.4:
   version "1.4.4"
   resolved "https://registry.nlark.com/qrcode/download/qrcode-1.4.4.tgz#f0c43568a7e7510a55efc3b88d9602f71963ea83"
